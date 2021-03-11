@@ -1,0 +1,40 @@
+{
+  "name": "@zenweb/schedule",
+  "version": "1.0.0",
+  "description": "Zenweb Schedule module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "YeFei",
+    "email": "316606233@qq.com"
+  },
+  "keywords": [
+    "web",
+    "app",
+    "http",
+    "framework",
+    "schedule",
+    "cron",
+    "koa"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yefei/zenweb-schedule.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yefei/zenweb-schedule/issues"
+  },
+  "devDependencies": {
+    "eslint": "^7.16.0",
+    "koa": "^2.13.1",
+    "zenweb": "^1.5.1"
+  },
+  "dependencies": {
+    "@feiye/discover": "^1.0.0",
+    "debug": "^4.3.1",
+    "node-schedule": "^2.0.0"
+  }
+}
