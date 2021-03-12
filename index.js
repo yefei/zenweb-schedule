@@ -14,7 +14,7 @@ function setup(core, options) {
     paths: [path.join(process.cwd(), 'app', 'schedule')],
   }, options);
   debug('options: %o', options);
-  const register = new ScheduleRegister(core);
+  const register = new ScheduleRegister(core, options);
   Object.defineProperty(core, 'schedule', { value: register });
   if (options.paths && options.paths.length) {
     options.paths.forEach(path => {
