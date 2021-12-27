@@ -1,10 +1,10 @@
 import '@zenweb/router';
-import schedule = require('node-schedule');
 import { ServerResponse, IncomingMessage } from 'http';
-import { Context, Next } from 'koa';
+import { Context, Next, Middleware } from 'koa';
 import { Core } from '@zenweb/core';
 import { RequestCallback, ScheduleOption } from './types';
 import { Router } from '@zenweb/router';
+import { scheduleJob, RecurrenceRule, RecurrenceSpecDateRange, RecurrenceSpecObjLit } from 'node-schedule';
 
 const SAFE_IP = '127.0.0.1';
 
@@ -31,22 +31,13 @@ export class ScheduleRegister {
     this._index = 0;
   }
 
-  job(...args: any[]) {
-    let name = '';
-    let rule;
-
-    if (typeof args[1] === 'string') {
-      name = args[0];
-      rule = args[1];
-      args = args.slice(2);
-    } else {
-      rule = args[0];
-      args = args.slice(1);
-    }
-
+  job(
+    rule: RecurrenceRule | RecurrenceSpecDateRange | RecurrenceSpecObjLit | Date | string | number,
+    ...middleware: Middleware[]
+    ) {
     // 注册到路由
-    const path = `/___schedule/job/${this._index++}/${name}`;
-    this.router.post(path, safeCheck, ...args);
+    const path = `/___schedule/job/${this._index++}`;
+    this.router.post(path, safeCheck, ...middleware);
 
     // 注册到 scheduleJob
     const callback = () => {
@@ -75,6 +66,6 @@ export class ScheduleRegister {
         this.callback(request, response);
       }
     };
-    return schedule.scheduleJob(name, rule, callback);
+    return scheduleJob(rule, callback);
   }
 }
