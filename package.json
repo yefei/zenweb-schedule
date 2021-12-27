@@ -1,8 +1,9 @@
 {
   "name": "@zenweb/schedule",
-  "version": "1.0.0",
+  "version": "2.3.0",
   "description": "Zenweb Schedule module",
-  "main": "index.js",
+  "exports": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -28,13 +29,10 @@
     "url": "https://github.com/yefei/zenweb-schedule/issues"
   },
   "devDependencies": {
-    "eslint": "^7.16.0",
-    "koa": "^2.13.1",
-    "zenweb": "^1.5.1"
+    "@zenweb/core": "^2.3.2",
+    "zenweb": "^2.3.1"
   },
   "dependencies": {
-    "@feiye/discover": "^1.0.0",
-    "debug": "^4.3.1",
     "node-schedule": "^2.0.0"
   }
 }
