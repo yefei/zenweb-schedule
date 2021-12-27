@@ -1,36 +1,37 @@
-'use strict';
-
-const schedule = require('node-schedule');
-const { ServerResponse } = require('http');
+import '@zenweb/router';
+import schedule = require('node-schedule');
+import { ServerResponse, IncomingMessage } from 'http';
+import { Context, Next } from 'koa';
+import { Core } from '@zenweb/core';
+import { RequestCallback, ScheduleOption } from './types';
+import { Router } from '@zenweb/router';
 
 const SAFE_IP = '127.0.0.1';
 
 /**
  * 安全检查，防止外部调用
- * @param {import('koa').Context} ctx
- * @param {import('koa').Middleware} next
  */
-function safeCheck(ctx, next) {
+function safeCheck(ctx: Context, next: Next) {
   if (!ctx.req.socket.remoteAddress || !ctx.req.socket.remoteAddress.endsWith(SAFE_IP)) {
     ctx.throw(403);
   }
   return next();
 }
 
-class ScheduleRegister {
-  /**
-   * @param {import('@zenweb/core').Core} core
-   * @param {object} [options]
-   * @param {(req, res, callback: (req, res) => void) => void} [options.jobCallback] 自定义任务调用
-   */
-  constructor(core, options) {
-    this.options = options || {};
+export class ScheduleRegister {
+  option: ScheduleOption;
+  router: Router;
+  callback: RequestCallback;
+  private _index: number;
+
+  constructor(core: Core, option?: ScheduleOption) {
+    this.option = option || {};
     this.router = core.router;
     this.callback = core.koa.callback();
     this._index = 0;
   }
 
-  job(...args) {
+  job(...args: any[]) {
     let name = '';
     let rule;
 
@@ -48,11 +49,8 @@ class ScheduleRegister {
     this.router.post(path, safeCheck, ...args);
 
     // 注册到 scheduleJob
-    const jobArgs = [];
-    if (name) jobArgs.push(name);
-    jobArgs.push(rule);
-    jobArgs.push(() => {
-      const request = {
+    const callback = () => {
+      const request: IncomingMessage = Object.assign({
         headers: {
           host: '127.0.0.1',
         },
@@ -69,18 +67,14 @@ class ScheduleRegister {
           remoteAddress: SAFE_IP,
           remotePort: 7001,
         },
-      };
+      });
       const response = new ServerResponse(request);
-      if (this.options.jobCallback) {
-        this.options.jobCallback(request, response, this.callback);
+      if (this.option.jobCallback) {
+        this.option.jobCallback(request, response, this.callback);
       } else {
         this.callback(request, response);
       }
-    });
-    return schedule.scheduleJob(...jobArgs);
+    };
+    return schedule.scheduleJob(name, rule, callback);
   }
 }
-
-module.exports = {
-  ScheduleRegister,
-};

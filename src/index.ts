@@ -1,29 +1,33 @@
-'use strict';
+import * as globby from 'globby';
+import { SetupFunction } from '@zenweb/core';
+import path = require('path');
+import { ScheduleRegister } from './register';
+import { ScheduleOption } from './types';
+export * from './types';
 
-const path = require('path');
-const { discover } = require('@feiye/discover');
-const debug = require('./lib/debug');
-const { ScheduleRegister } = require('./lib/register');
-
-/**
- * @param {import('@zenweb/core').Core} core 
- * @param {*} [options]
- */
-function setup(core, options) {
-  options = Object.assign({
-    paths: [path.join(process.cwd(), 'app', 'schedule')],
-  }, options);
-  debug('options: %o', options);
-  const register = new ScheduleRegister(core, options);
-  Object.defineProperty(core, 'schedule', { value: register });
-  if (options.paths && options.paths.length) {
-    options.paths.forEach(path => {
-      const count = discover(path);
-      debug('load: %s %o files', path, count);
-    });
+export function setup(option?: ScheduleOption): SetupFunction {
+  return async function schedule(setup) {
+    option = Object.assign({
+      paths: [path.join(process.cwd(), 'app', 'schedule')],
+    }, option);
+    setup.debug('option: %o', option);
+    const register = new ScheduleRegister(setup.core, option);
+    setup.defineCoreProperty('schedule', { value: register });
+    if (option.paths && option.paths.length) {
+      for (const d of option.paths) {
+        let count = 0;
+        for (const m of await globby(d, { cwd: d, absolute: true })) {
+          require(m);
+          count++;
+        }
+        setup.debug('load: %s %o files', d, count);
+      }
+    }
   }
 }
 
-module.exports = {
-  setup,
-};
+declare module '@zenweb/core' {
+  interface Core {
+    schedule: ScheduleRegister;
+  }
+}
