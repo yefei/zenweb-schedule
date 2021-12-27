@@ -5,7 +5,7 @@ import { ScheduleRegister } from './register';
 import { ScheduleOption } from './types';
 export * from './types';
 
-export function setup(option?: ScheduleOption): SetupFunction {
+export default function setup(option?: ScheduleOption): SetupFunction {
   return async function schedule(setup) {
     option = Object.assign({
       paths: [path.join(process.cwd(), 'app', 'schedule')],
