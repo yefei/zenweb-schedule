@@ -1,6 +1,6 @@
 {
   "name": "@zenweb/schedule",
-  "version": "2.3.5",
+  "version": "2.3.6",
   "description": "Zenweb Schedule module",
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -8,7 +8,7 @@
     "dist"
   ],
   "scripts": {
-    "prepublishOnly": "rm -fr dist && tsc"
+    "prepublishOnly": "rimraf dist && tsc"
   },
   "author": {
     "name": "YeFei",
