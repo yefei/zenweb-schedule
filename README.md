@@ -18,3 +18,8 @@ app.schedule.job('*/1 * * * * *', ctx => {
   console.log('task echo');
 });
 ```
+
+## Develop
+```
+$ yarn global add rimraf typescript
+```
