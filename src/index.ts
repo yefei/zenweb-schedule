@@ -16,7 +16,7 @@ export default function setup(option?: ScheduleOption): SetupFunction {
     if (option.paths && option.paths.length) {
       for (const d of option.paths) {
         let count = 0;
-        for (const m of await globby(d, { cwd: d, absolute: true })) {
+        for (const m of await globby(option.patterns || '**/*.{ts,js}', { cwd: d, absolute: true })) {
           require(m);
           count++;
         }
