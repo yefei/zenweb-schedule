@@ -13,6 +13,4 @@ export interface ScheduleOption {
    * 文件匹配规则，默认: ** /*.{ts,js}
    */
   patterns?: string;
-
-  jobCallback?: JobCallback;
 }

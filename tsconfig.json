@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "target": "ES2019",
     "lib": [
       "ES2019"
     ],
     "module": "commonjs",
-    "noImplicitAny": true,
-    "preserveConstEnums": true,
-    "sourceMap": true,
+    "strict": true,
+    "strictNullChecks": false,
     "declaration": true,
     "outDir": "./dist"
   },

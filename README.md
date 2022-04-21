@@ -2,24 +2,8 @@
 
 [ZenWeb](https://www.npmjs.com/package/zenweb)
 
-## Quick start
-```
-$ npm i @zenweb/schedule
-```
+定时任务
 
-app/index.js
-```js
-app.setup('@zenweb/schedule');
-```
+## 安装
 
-app/schedule/echo.js
-```js
-app.schedule.job('*/1 * * * * *', ctx => {
-  console.log('task echo');
-});
-```
-
-## Develop
-```
-$ yarn global add rimraf typescript
-```
+安装定时任务模块依赖于 @zenweb/inject @zenweb/router 模块

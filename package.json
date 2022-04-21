@@ -1,6 +1,6 @@
 {
   "name": "@zenweb/schedule",
-  "version": "2.3.6",
+  "version": "3.0.0",
   "description": "Zenweb Schedule module",
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -8,7 +8,8 @@
     "dist"
   ],
   "scripts": {
-    "prepublishOnly": "rimraf dist && tsc"
+    "prepublishOnly": "rm -fr dist && tsc",
+    "dev": "cd example && DEBUG=* ts-node app"
   },
   "author": {
     "name": "YeFei",
@@ -32,9 +33,9 @@
     "url": "https://github.com/yefei/zenweb-schedule/issues"
   },
   "devDependencies": {
-    "@zenweb/core": "^2.3.2",
-    "@zenweb/router": "^2.3.0",
-    "zenweb": "^2.3.1"
+    "@zenweb/core": "^2.4.1",
+    "@zenweb/inject": "^3.5.0",
+    "@zenweb/router": "^3.0.0"
   },
   "dependencies": {
     "@types/node-schedule": "^1.3.2",

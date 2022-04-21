@@ -1,12 +1,13 @@
+import '@zenweb/inject';
 import '@zenweb/router';
 import { ServerResponse, IncomingMessage } from 'http';
 import { Context, Next, Middleware } from 'koa';
 import { Core } from '@zenweb/core';
-import { RequestCallback, ScheduleOption } from './types';
-import { Router } from '@zenweb/router';
 import { scheduleJob, RecurrenceRule, RecurrenceSpecDateRange, RecurrenceSpecObjLit } from 'node-schedule';
+import { randomUUID } from 'crypto';
 
 const SAFE_IP = '127.0.0.1';
+const JOBS = Symbol('Schedule#jobs');
 
 /**
  * 安全检查，防止外部调用
@@ -18,54 +19,83 @@ function safeCheck(ctx: Context, next: Next) {
   return next();
 }
 
-export class ScheduleRegister {
-  option: ScheduleOption;
-  router: Router;
-  callback: RequestCallback;
-  private _index: number;
+interface ScheduleMethodOption {
+  rule: RecurrenceRule | RecurrenceSpecDateRange | RecurrenceSpecObjLit | Date | string | number;
+  middleware?: Middleware | Middleware[];
+}
 
-  constructor(core: Core, option?: ScheduleOption) {
-    this.option = option || {};
-    this.router = core.router;
-    this.callback = core.koa.callback();
-    this._index = 0;
+interface JobItem extends ScheduleMethodOption {
+  path: string;
+  handle: (...args: any[]) => Promise<void> | void;
+  params: any[];
+}
+
+/**
+ * 取得对象中的任务列表
+ */
+export function getJobs(target: any): JobItem[] {
+  return Reflect.getMetadata(JOBS, target) || [];
+}
+
+/**
+ * 在对象中添加任务配置
+ */
+export function addJob(target: any, item: JobItem) {
+  const list = [...getJobs(target), item];
+  Reflect.defineMetadata(JOBS, list, target);
+}
+
+/**
+ * 定时任务设定
+ */
+export function schedule(opt: ScheduleMethodOption) {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    const path = `/__schedule/${randomUUID()}/${target.constructor.name}.${propertyKey}`;
+    const params = Reflect.getOwnMetadata('design:paramtypes', target, propertyKey) || [];
+    addJob(target, Object.assign({
+      path,
+      handle: descriptor.value,
+      params,
+    }, opt));
   }
+}
 
-  job(
-    rule: RecurrenceRule | RecurrenceSpecDateRange | RecurrenceSpecObjLit | Date | string | number,
-    ...middleware: Middleware[]
-    ) {
-    // 注册到路由
-    const path = `/___schedule/job/${this._index++}`;
-    this.router.post(path, safeCheck, ...middleware);
-
-    // 注册到 scheduleJob
-    const callback = () => {
-      const request: IncomingMessage = Object.assign({
-        headers: {
-          host: '127.0.0.1',
-        },
-        query: {},
-        querystring: '',
-        host: '127.0.0.1',
-        hostname: '127.0.0.1',
-        protocol: 'http',
-        secure: 'false',
-        method: 'POST',
-        url: path,
-        path: path,
-        socket: {
-          remoteAddress: SAFE_IP,
-          remotePort: 7001,
-        },
+/**
+ * 添加定时任务到路由并启动定时器
+ */
+export function registerSchedule(core: Core, target: any) {
+  const jobs = getJobs(target.prototype);
+  if (jobs.length > 0) {
+    for (const item of jobs) {
+      // 添加到路由中
+      core.router.post(item.path, safeCheck, ...(item.middleware ?
+        (Array.isArray(item.middleware) ? item.middleware : [item.middleware]) : []), async ctx => {
+        const cls = await ctx.injector.getInstance(target);
+        ctx.injector.apply(cls, item);
       });
-      const response = new ServerResponse(request);
-      if (this.option.jobCallback) {
-        this.option.jobCallback(request, response, this.callback);
-      } else {
-        this.callback(request, response);
-      }
-    };
-    return scheduleJob(rule, callback);
+      // 启用定时器
+      scheduleJob(item.rule, function callback() {
+        const request: IncomingMessage = Object.assign({
+          headers: {
+            host: '127.0.0.1',
+          },
+          query: {},
+          querystring: '',
+          host: '127.0.0.1',
+          hostname: '127.0.0.1',
+          protocol: 'http',
+          secure: 'false',
+          method: 'POST',
+          url: item.path,
+          path: item.path,
+          socket: {
+            remoteAddress: SAFE_IP,
+            remotePort: 7001,
+          },
+        });
+        const response = new ServerResponse(request);
+        core.koa.callback()(request, response);
+      });
+    }
   }
 }
