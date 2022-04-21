@@ -71,7 +71,7 @@ export function registerSchedule(core: Core, target: any) {
       core.router.post(item.path, safeCheck, ...(item.middleware ?
         (Array.isArray(item.middleware) ? item.middleware : [item.middleware]) : []), async ctx => {
         const cls = await ctx.injector.getInstance(target);
-        ctx.injector.apply(cls, item);
+        await ctx.injector.apply(cls, item);
       });
       // 启用定时器
       scheduleJob(item.rule, function callback() {
