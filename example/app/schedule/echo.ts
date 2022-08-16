@@ -7,4 +7,9 @@ export class EchoController {
     console.log('task echo');
     ctx.body = 'ok';
   }
+
+  @schedule({ rule: '*/4 * * * * *' })
+  err(ctx: Context) {
+    ctx.errrrr();
+  }
 }

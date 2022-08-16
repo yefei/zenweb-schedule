@@ -12,6 +12,7 @@ export default function setup(option?: ScheduleOption): SetupFunction {
   return async function schedule(setup) {
     setup.checkCoreProperty('injector', '@zenweb/inject');
     setup.checkCoreProperty('router', '@zenweb/router');
+    setup.checkCoreProperty('log', '@zenweb/log');
     setup.debug('option: %o', option);
     setup.defineCoreProperty('schedule', { value: true });
     if (option.paths && option.paths.length) {

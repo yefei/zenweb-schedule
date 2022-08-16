@@ -35,6 +35,7 @@
   "devDependencies": {
     "@zenweb/core": "^2.4.1",
     "@zenweb/inject": "^3.5.0",
+    "@zenweb/log": "^2.3.1",
     "@zenweb/router": "^3.0.0"
   },
   "dependencies": {

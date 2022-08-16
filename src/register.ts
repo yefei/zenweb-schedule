@@ -1,5 +1,6 @@
 import '@zenweb/inject';
 import '@zenweb/router';
+import '@zenweb/log';
 import { ServerResponse, IncomingMessage } from 'http';
 import { Context, Next, Middleware } from 'koa';
 import { Core } from '@zenweb/core';
@@ -12,11 +13,19 @@ const JOBS = Symbol('Schedule#jobs');
 /**
  * 安全检查，防止外部调用
  */
-function safeCheck(ctx: Context, next: Next) {
+async function safeCheck(ctx: Context, next: Next) {
+  const startTime = Date.now();
+  ctx.log.info('start');
   if (!ctx.req.socket.remoteAddress || !ctx.req.socket.remoteAddress.endsWith(SAFE_IP)) {
     ctx.throw(403);
   }
-  return next();
+  try {
+    await next();
+  } catch (err:any) {
+    ctx.log.child({ err }).error('error');
+  } finally {
+    ctx.log.info('end', Date.now() - startTime, 'ms');
+  }
 }
 
 interface ScheduleMethodOption {
