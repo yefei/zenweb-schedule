@@ -13,4 +13,13 @@ export interface ScheduleOption {
    * 文件匹配规则，默认: ** /*.{ts,js}
    */
   patterns?: string;
+
+  /**
+   * 是否禁用定时器
+   * 如禁用只注册到路由而不自动执行
+   * 可以通过环境变量 ZENWEB_SCHEDULE_DISABLED=1 控制
+   * 
+   * @default false
+   */
+  disabled?: boolean;
 }

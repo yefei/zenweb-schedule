@@ -6,6 +6,7 @@ import { Context, Next, Middleware } from 'koa';
 import { Core } from '@zenweb/core';
 import { scheduleJob, RecurrenceRule, RecurrenceSpecDateRange, RecurrenceSpecObjLit } from 'node-schedule';
 import { randomUUID } from 'crypto';
+import { ScheduleOption } from './types';
 
 const SAFE_IP = '127.0.0.1';
 const JOBS = Symbol('Schedule#jobs');
@@ -72,7 +73,7 @@ export function schedule(opt: ScheduleMethodOption) {
 /**
  * 添加定时任务到路由并启动定时器
  */
-export function registerSchedule(core: Core, target: any) {
+export function registerSchedule(core: Core, target: any, option: ScheduleOption) {
   const jobs = getJobs(target.prototype);
   if (jobs.length > 0) {
     for (const item of jobs) {
@@ -82,6 +83,9 @@ export function registerSchedule(core: Core, target: any) {
         const cls = await ctx.injector.getInstance(target);
         await ctx.injector.apply(cls, item);
       });
+      if (option.disabled) {
+        continue;
+      }
       // 启用定时器
       scheduleJob(item.rule, function callback() {
         const request: IncomingMessage = Object.assign({

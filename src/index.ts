@@ -8,6 +8,7 @@ export { ScheduleOption, schedule };
 export default function setup(option?: ScheduleOption): SetupFunction {
   option = Object.assign({
     paths: [path.join(process.cwd(), 'app', 'schedule')],
+    disabled: process.env.ZENWEB_SCHEDULE_DISABLED === '1',
   }, option);
   return async function schedule(setup) {
     setup.checkCoreProperty('injector', '@zenweb/inject');
@@ -21,7 +22,7 @@ export default function setup(option?: ScheduleOption): SetupFunction {
           const mod = require(file.slice(0, -3));
           for (const i of Object.values(mod)) {
             if (typeof i === 'function') {
-              registerSchedule(setup.core, i);
+              registerSchedule(setup.core, i, option);
             }
           }
         }

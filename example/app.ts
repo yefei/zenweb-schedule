@@ -8,5 +8,7 @@ const app = new Core();
 app.setup(modInject());
 app.setup(modRouter());
 app.setup(modLog());
-app.setup(modSchedule());
+app.setup(modSchedule({
+  // disabled: true,
+}));
 app.start();
