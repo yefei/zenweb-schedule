@@ -2,14 +2,15 @@ import '@zenweb/inject';
 import '@zenweb/router';
 import '@zenweb/log';
 import { ServerResponse, IncomingMessage } from 'http';
-import { Context, Next, Middleware } from 'koa';
-import { Core } from '@zenweb/core';
-import { scheduleJob, RecurrenceRule, RecurrenceSpecDateRange, RecurrenceSpecObjLit } from 'node-schedule';
+import { Context, Core, Next, Middleware } from '@zenweb/core';
+import { scheduleJob, RecurrenceRule, RecurrenceSpecDateRange, RecurrenceSpecObjLit, Job } from 'node-schedule';
 import { randomUUID } from 'crypto';
+import { MethodDescriptor, makeMethodDecorator } from 'decorator-make';
 import { ScheduleOption } from './types';
+import { Router } from '@zenweb/router';
+import { scope } from '@zenweb/inject';
 
 const SAFE_IP = '127.0.0.1';
-const JOBS = Symbol('Schedule#jobs');
 
 /**
  * 安全检查，防止外部调用
@@ -34,81 +35,89 @@ interface ScheduleMethodOption {
   middleware?: Middleware | Middleware[];
 }
 
-interface JobItem extends ScheduleMethodOption {
+interface JobItem extends MethodDescriptor, ScheduleMethodOption {
   path: string;
-  handle: (...args: any[]) => Promise<void> | void;
-  params: any[];
 }
 
-/**
- * 取得对象中的任务列表
- */
-export function getJobs(target: any): JobItem[] {
-  return Reflect.getMetadata(JOBS, target) || [];
-}
-
-/**
- * 在对象中添加任务配置
- */
-export function addJob(target: any, item: JobItem) {
-  const list = [...getJobs(target), item];
-  Reflect.defineMetadata(JOBS, list, target);
-}
+const scheduleDecorator = makeMethodDecorator<JobItem>();
 
 /**
  * 定时任务设定
  */
 export function schedule(opt: ScheduleMethodOption) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-    const path = `/__schedule/${randomUUID()}/${target.constructor.name}.${propertyKey}`;
-    const params = Reflect.getOwnMetadata('design:paramtypes', target, propertyKey) || [];
-    addJob(target, Object.assign({
-      path,
-      handle: descriptor.value,
-      params,
-    }, opt));
-  }
+  return scheduleDecorator.wrap((descriptor, target) => {
+    const path = `${randomUUID()}/${target.constructor.name}.${descriptor.handle.name}`;
+    return Object.assign({ path }, descriptor, opt);
+  });
 }
 
-/**
- * 添加定时任务到路由并启动定时器
- */
-export function registerSchedule(core: Core, target: any, option: ScheduleOption) {
-  const jobs = getJobs(target.prototype);
-  if (jobs.length > 0) {
-    for (const item of jobs) {
-      // 添加到路由中
-      core.router.post(item.path, safeCheck, ...(item.middleware ?
-        (Array.isArray(item.middleware) ? item.middleware : [item.middleware]) : []), async ctx => {
-        const cls = await ctx.injector.getInstance(target);
-        await ctx.injector.apply(cls, item);
-      });
-      if (option.disabled) {
-        continue;
-      }
-      // 启用定时器
-      scheduleJob(item.rule, function callback() {
-        const request: IncomingMessage = Object.assign({
-          headers: {
-            host: '127.0.0.1',
-          },
-          query: {},
-          querystring: '',
-          host: '127.0.0.1',
-          hostname: '127.0.0.1',
-          protocol: 'http',
-          secure: 'false',
-          method: 'POST',
-          url: item.path,
-          path: item.path,
-          socket: {
-            remoteAddress: SAFE_IP,
-            remotePort: 7001,
-          },
+export class ScheduleRegister {
+  private core: Core;
+  private router: Router;
+  private option: ScheduleOption;
+  private jobs: Job[] = [];
+
+  constructor(core: Core, option: ScheduleOption) {
+    this.core = core;
+    this.router = new Router({
+      prefix: '/__schedule/',
+    });
+    this.option = option;
+  }
+
+  /**
+   * 添加定时任务到路由并启动定时器
+   */
+  register(target: any) {
+    const methods = scheduleDecorator.getMethods(target.prototype);
+    if (methods.length > 0) {
+      scope('prototype', false)(target);
+      for (const item of methods) {
+        // 添加到路由中
+        this.router.post(item.path, safeCheck, ...(item.middleware ?
+          (Array.isArray(item.middleware) ? item.middleware : [item.middleware]) : []), async ctx => {
+          const cls = await ctx.injector.getInstance(target);
+          await ctx.injector.apply(cls, item);
         });
-        const response = new ServerResponse(request);
-        core.koa.callback()(request, response);
-      });
+        if (this.option.disabled) {
+          continue;
+        }
+        // 启用定时器
+        const job = scheduleJob(item.rule, () => {
+          const path = '/__schedule/' + item.path;
+          const request: IncomingMessage = Object.assign({
+            headers: {
+              host: '127.0.0.1',
+            },
+            query: {},
+            querystring: '',
+            host: '127.0.0.1',
+            hostname: '127.0.0.1',
+            protocol: 'http',
+            secure: 'false',
+            method: 'POST',
+            url: path,
+            path,
+            socket: {
+              remoteAddress: SAFE_IP,
+              remotePort: 7001,
+            },
+          });
+          const response = new ServerResponse(request);
+          this.core.koa.callback()(request, response);
+        });
+        this.jobs.push(job);
+      }
+    }
+  }
+
+  addToCoreRouter() {
+    this.core.router.use(this.router.routes());
+  }
+
+  destory() {
+    for (const job of this.jobs) {
+      job.cancel();
     }
   }
 }

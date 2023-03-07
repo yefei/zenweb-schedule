@@ -1,11 +1,11 @@
-import { Context } from "@zenweb/inject";
+import { Context } from "@zenweb/core";
 import { schedule } from "../../../src";
 
 export class EchoController {
   @schedule({ rule: '*/1 * * * * *' })
-  echo(ctx: Context) {
+  echo() {
     console.log('task echo');
-    ctx.body = 'ok';
+    return 'ok';
   }
 
   @schedule({ rule: '*/4 * * * * *' })
