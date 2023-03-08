@@ -2,33 +2,13 @@ import '@zenweb/inject';
 import '@zenweb/router';
 import '@zenweb/log';
 import { ServerResponse, IncomingMessage } from 'http';
-import { Context, Core, Next, Middleware } from '@zenweb/core';
+import { Core, Middleware } from '@zenweb/core';
 import { scheduleJob, RecurrenceRule, RecurrenceSpecDateRange, RecurrenceSpecObjLit, Job } from 'node-schedule';
 import { randomUUID } from 'crypto';
 import { MethodDescriptor, makeMethodDecorator } from 'decorator-make';
 import { ScheduleOption } from './types';
 import { Router } from '@zenweb/router';
 import { scope } from '@zenweb/inject';
-
-const SAFE_IP = '127.0.0.1';
-
-/**
- * 安全检查，防止外部调用
- */
-async function safeCheck(ctx: Context, next: Next) {
-  const startTime = Date.now();
-  ctx.log.info('start');
-  if (!ctx.req.socket.remoteAddress || !ctx.req.socket.remoteAddress.endsWith(SAFE_IP)) {
-    ctx.throw(403);
-  }
-  try {
-    await next();
-  } catch (err:any) {
-    ctx.log.child({ err }).error('error');
-  } finally {
-    ctx.log.info('end', Date.now() - startTime, 'ms');
-  }
-}
 
 interface ScheduleMethodOption {
   rule: RecurrenceRule | RecurrenceSpecDateRange | RecurrenceSpecObjLit | Date | string | number;
@@ -74,7 +54,7 @@ export class ScheduleRegister {
       scope('prototype', false)(target);
       for (const item of methods) {
         // 添加到路由中
-        this.router.post(item.path, safeCheck, ...(item.middleware ?
+        this.router.post(item.path, ...(item.middleware ?
           (Array.isArray(item.middleware) ? item.middleware : [item.middleware]) : []), async ctx => {
           const cls = await ctx.injector.getInstance(target);
           await ctx.injector.apply(cls, item);
@@ -99,7 +79,7 @@ export class ScheduleRegister {
             url: path,
             path,
             socket: {
-              remoteAddress: SAFE_IP,
+              remoteAddress: '127.0.0.1',
               remotePort: 7001,
             },
           });
