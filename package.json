@@ -34,9 +34,9 @@
     "url": "https://github.com/yefei/zenweb-schedule/issues"
   },
   "devDependencies": {
-    "@zenweb/core": "^3.1.6",
+    "@zenweb/core": "^3.3.0",
     "@zenweb/inject": "^3.17.0",
-    "@zenweb/log": "^3.0.0",
+    "@zenweb/log": "^3.2.0",
     "@zenweb/router": "^3.1.1",
     "rimraf": "^4.3.1",
     "ts-node": "^10.9.1",

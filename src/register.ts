@@ -104,7 +104,7 @@ export class ScheduleRegister {
             },
           });
           const response = new ServerResponse(request);
-          this.core.koa.callback()(request, response);
+          this.core.app.callback()(request, response);
         });
         this.jobs.push(job);
       }
