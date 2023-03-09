@@ -1,6 +1,3 @@
-import '@zenweb/inject';
-import '@zenweb/router';
-import '@zenweb/log';
 import { ServerResponse, IncomingMessage } from 'http';
 import { Core, Middleware } from '@zenweb/core';
 import { scheduleJob, RecurrenceRule, RecurrenceSpecDateRange, RecurrenceSpecObjLit, Job } from 'node-schedule';
