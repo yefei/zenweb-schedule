@@ -10,6 +10,6 @@ export class EchoController {
 
   @schedule({ rule: '*/4 * * * * *' })
   err(ctx: Context) {
-    ctx.errrrr();
+    (<any>ctx).errrrr();
   }
 }

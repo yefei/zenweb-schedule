@@ -4,6 +4,20 @@
 
 定时任务
 
-## 安装
+```ts
+import { Context } from 'zenweb';
+import { schedule } from '@zenweb/schedule';
 
-安装定时任务模块依赖于 @zenweb/inject @zenweb/router 模块
+export class EchoScheduler {
+  @schedule({ rule: '*/1 * * * * *' })
+  echo() {
+    console.log('task echo');
+    return 'ok';
+  }
+
+  @schedule({ rule: '*/4 * * * * *' })
+  err(ctx: Context) {
+    ctx.errrrr();
+  }
+}
+```

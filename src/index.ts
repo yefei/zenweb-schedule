@@ -11,14 +11,13 @@ export default function setup(option?: ScheduleOption): SetupFunction {
     disabled: process.env.ZENWEB_SCHEDULE_DISABLED === '1',
   }, option);
   return async function schedule(setup) {
-    setup.checkCoreProperty('injector', '@zenweb/inject');
-    setup.checkCoreProperty('router', '@zenweb/router');
-    setup.checkCoreProperty('log', '@zenweb/log');
+    setup.assertModuleExists('inject', '@zenweb/inject');
+    setup.assertModuleExists('router', '@zenweb/router');
 
     setup.debug('option: %o', option);
 
-    const schedule = new ScheduleRegister(setup.core, option);
-    setup.defineCoreProperty('schedule', { value: schedule });
+    const scheduleRegister = new ScheduleRegister(setup.core, option);
+    setup.defineCoreProperty('scheduleRegister', { value: scheduleRegister });
 
     if (option.paths && option.paths.length) {
       for (const d of option.paths) {
@@ -26,7 +25,7 @@ export default function setup(option?: ScheduleOption): SetupFunction {
           const mod = require(file.slice(0, -3));
           for (const i of Object.values(mod)) {
             if (typeof i === 'function') {
-              schedule.register(i);
+              scheduleRegister.register(i);
             }
           }
         }
@@ -34,17 +33,17 @@ export default function setup(option?: ScheduleOption): SetupFunction {
     }
 
     setup.after(() => {
-      schedule.addToCoreRouter();
+      scheduleRegister.addToCoreRouter();
     });
 
     setup.destroy(() => {
-      schedule.destory();
+      scheduleRegister.destory();
     });
   }
 }
 
 declare module '@zenweb/core' {
   interface Core {
-    schedule: ScheduleRegister;
+    scheduleRegister: ScheduleRegister;
   }
 }
