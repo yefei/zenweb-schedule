@@ -1,6 +1,6 @@
 {
   "name": "@zenweb/schedule",
-  "version": "3.6.0",
+  "version": "3.6.1",
   "description": "Zenweb Schedule module",
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -34,7 +34,7 @@
     "url": "https://github.com/yefei/zenweb-schedule/issues"
   },
   "devDependencies": {
-    "@zenweb/core": "^3.5.0",
+    "@zenweb/core": "^3.5.1",
     "@zenweb/inject": "^3.18.0",
     "@zenweb/router": "^3.3.0",
     "cross-env": "^7.0.3",

@@ -21,3 +21,8 @@ export class EchoScheduler {
   }
 }
 ```
+
+## Changelog
+
+### 3.6.1
+- null 检查

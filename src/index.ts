@@ -5,11 +5,11 @@ import { schedule, ScheduleRegister } from './register';
 import { ScheduleOption } from './types';
 export { ScheduleOption, schedule };
 
-export default function setup(option?: ScheduleOption): SetupFunction {
-  option = Object.assign({
+export default function setup(opt?: ScheduleOption): SetupFunction {
+  const option = Object.assign({
     paths: [path.join(process.cwd(), 'app', 'schedule')],
     disabled: process.env.ZENWEB_SCHEDULE_DISABLED === '1',
-  }, option);
+  }, opt);
   return async function schedule(setup) {
     setup.assertModuleExists('inject', '@zenweb/inject');
     setup.assertModuleExists('router', '@zenweb/router');
