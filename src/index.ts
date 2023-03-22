@@ -7,7 +7,7 @@ export { ScheduleOption, schedule };
 
 export default function setup(opt?: ScheduleOption): SetupFunction {
   const option = Object.assign({
-    paths: [path.join(process.cwd(), 'app', 'schedule')],
+    paths: ['./app/schedule'],
     disabled: process.env.ZENWEB_SCHEDULE_DISABLED === '1',
   }, opt);
   return async function schedule(setup) {
@@ -20,7 +20,10 @@ export default function setup(opt?: ScheduleOption): SetupFunction {
     setup.defineCoreProperty('scheduleRegister', { value: scheduleRegister });
 
     if (option.paths && option.paths.length) {
-      for (const d of option.paths) {
+      for (let d of option.paths) {
+        if (d.startsWith('./')) {
+          d = path.join(process.cwd(), d.slice(2));
+        }
         for (const file of await globby(option.patterns || '**/*.{ts,js}', { cwd: d, absolute: true })) {
           const mod = require(file.slice(0, -3));
           for (const i of Object.values(mod)) {
